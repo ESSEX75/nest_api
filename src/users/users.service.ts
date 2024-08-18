@@ -15,14 +15,11 @@ export class UsersService {
   }
 
   async findOneByTelegramId(telegramId: number) {
-    console.log('!!!!!!!!!');
-    const temple = this.repository.user.findUnique({
+    return this.repository.user.findUnique({
       where: {
         telegramId
       }
     });
-    console.log('temple', temple);
-    return temple;
   }
 
   async create(user: UserDto) {

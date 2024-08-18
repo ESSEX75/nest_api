@@ -33,12 +33,4 @@ export class AuthService {
       throw new ForbiddenException('Invalid Telegram init data');
     }
   }
-
-  async serchUser(tgId: number) {
-    try {
-      return await this.usersService.findOneByTelegramId(tgId);
-    } catch (err) {
-      throw new ForbiddenException('User not found');
-    }
-  }
 }

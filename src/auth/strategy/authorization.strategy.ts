@@ -3,18 +3,13 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-strategy';
 import { AuthService } from '../auth.service';
 import { Request } from 'express';
-import { UsersService } from '../../users/users.service';
 
 class CustomStrategy extends Strategy {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UsersService
-  ) {
+  constructor(private readonly authService: AuthService) {
     super();
   }
 
   async authenticate(req: Request): Promise<void> {
-    console.log('UsersService', this.userService.findOneByTelegramId);
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
       return this.fail(new UnauthorizedException('Init data is missing'), 401);
@@ -33,15 +28,24 @@ class CustomStrategy extends Strategy {
       // Валидация пользователя
       const parsedData = await this.authService.validateUser(initData);
 
-      // Поиск пользователя
-      const user = await this.userService.findOneByTelegramId(
-        parsedData.user.id
-      );
-
-      if (!user) {
+      if (!parsedData) {
         return this.fail(new UnauthorizedException('Invalid init data'), 401);
       }
 
+      // Поиск пользователя
+      const user = await this.authService.login(parsedData.user.id);
+
+      if (!user) {
+        console.log(
+          'UnauthorizedException',
+          this.error(
+            new UnauthorizedException('Invalid authorization header format')
+          )
+        );
+        return this.error(
+          new UnauthorizedException('Invalid authorization header format')
+        );
+      }
       return this.success(user);
     } catch (err) {
       return this.error(err);
