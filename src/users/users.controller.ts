@@ -1,18 +1,21 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Put, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
-
+import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { UserDto } from './dto/user.dto';
+import { Request } from 'express';
 
-@Controller('users')
-@ApiTags('users')
-@ApiBearerAuth()
+@Controller('user')
+@ApiTags('user')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly userService: UsersService) {}
 
-  @Get('/user')
-  //@UseGuards(JwtAuthGuard)
-  getMe(id: number) {
-    return this.usersService.findById(id);
+  @Auth()
+  @HttpCode(200)
+  @ApiBearerAuth('tma')
+  @Put()
+  async updateProfile(@Req() request: Request, @Body() dto: UserDto) {
+    const userId = request.user.id;
+    return this.userService.update(userId, dto);
   }
-
 }

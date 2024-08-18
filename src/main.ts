@@ -10,20 +10,29 @@ async function bootstrap() {
   app.enableCors({ credentials: true, origin: true });
 
   app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+  app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()
     .setTitle('Api для telegram_report')
     .setVersion('1.0')
-    .addApiKey({ type: 'apiKey', name: 'authorization', scheme: 'bearer', bearerFormat: 'bearer', }, 'tma')
-    
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'authorization',
+        scheme: 'bearer',
+        bearerFormat: 'bearer'
+      },
+      'tma'
+    )
+
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document, {
     swaggerOptions: {
-      persistAuthorization: true,
-    },
+      persistAuthorization: true
+    }
   });
 
-  await app.listen(7777);
+  await app.listen(4200);
 }
 bootstrap();

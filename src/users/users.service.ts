@@ -1,25 +1,45 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from './entities/user.entity';
-import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
+import { PrismaService } from 'src/prisma.service';
+import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(UserEntity) private repository: Repository<UserEntity>,
-  ) {}
+  constructor(private repository: PrismaService) {}
 
-  async findById(id: number): Promise<UserEntity | undefined> {
-    return this.repository.findOneBy({ id });
+  async findById(id: string) {
+    return this.repository.user.findUnique({
+      where: {
+        id
+      }
+    });
   }
 
-  async findOneByTelegramId(user_id: number): Promise<UserEntity | undefined> {
-    return this.repository.findOneBy({ user_id });
+  async findOneByTelegramId(telegramId: number) {
+    console.log('!!!!!!!!!');
+    const temple = this.repository.user.findUnique({
+      where: {
+        telegramId
+      }
+    });
+    console.log('temple', temple);
+    return temple;
   }
 
-  async create(dto: CreateUserDto): Promise<CreateUserDto> {
-    const user = this.repository.create(dto);
-    return this.repository.save(user);
+  async create(user: UserDto) {
+    return this.repository.user.create({
+      data: user
+    });
+  }
+
+  async update(id: string, dto: UserDto) {
+    return this.repository.user.update({
+      where: {
+        id
+      },
+      data: dto,
+      select: {
+        yandexToken: true
+      }
+    });
   }
 }

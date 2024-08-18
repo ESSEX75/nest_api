@@ -1,29 +1,56 @@
-import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  UnauthorizedException
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Response, Request } from 'express';
-import { AuthGuard } from '@nestjs/passport';
-import { LocalAuthGuard } from './guards/local.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
+import { Auth } from './decorators/auth.decorator';
+import { initDataRow } from './dto/init-data.dto';
 
 @ApiTags('auth')
- // замочик такой справа от контроллера 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
+  @Auth()
+  @HttpCode(200)
   @ApiBearerAuth('tma')
   @Post('login')
-  async login(@Body('user_id') user_id: number) {
+  async login(@Req() request: Request) {
+    const user = request.user;
+    console.log(user);
 
-    const user = await this.authService.login(user_id);
     if (!user) {
-      const newUser = await this.authService.register({ user_id });
-      return newUser;
+      throw new UnauthorizedException('Authorization header is missing');
     }
     return user;
   }
 
-  
-}
+  @HttpCode(200)
+  @Post('register')
+  async register(@Body() body: initDataRow) {
+    const initData = body.initDataRow;
 
+    if (!initData) {
+      throw new UnauthorizedException('Authorization body is missing');
+    }
+
+    try {
+      const parsedData = await this.authService.validateUser(initData);
+
+      const dataUser = { telegramId: parsedData.user.id, yandexToken: '' };
+
+      const newUser = await this.authService.register(dataUser);
+      console.log('newUser: ', newUser);
+
+      return newUser;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid init data');
+    }
+  }
+}

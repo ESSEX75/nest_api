@@ -3,19 +3,12 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from 'src/users/users.module';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
-import { LocalAuthGuard } from './strategy/local.strategy';
+import { AuthorizationGuard } from './guards/authorization.guard';
+import { AuthorizationStrategy } from './strategy/authorization.strategy';
 
 @Module({
-  imports: [
-    UsersModule,
-    PassportModule,
-    JwtModule.register({
-      secret: process.env.TELEGRAM_BOT_TOKEN,
-      signOptions: { expiresIn: '60m' },
-    }),
-  ],
+  imports: [UsersModule, PassportModule],
   controllers: [AuthController],
-  providers: [AuthService, LocalAuthGuard],
+  providers: [AuthService, AuthorizationGuard, AuthorizationStrategy]
 })
 export class AuthModule {}
